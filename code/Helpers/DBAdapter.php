@@ -1,6 +1,5 @@
 <?php
-
-namespace BatchWrite;
+namespace BatchWrite\Helpers;
 
 /**
  * Interface DBAdapter

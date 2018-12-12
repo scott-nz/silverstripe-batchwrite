@@ -1,4 +1,5 @@
 <?php
+namespace BatchWrite\Helpers;
 
 /**
  * Class QuickDataObject
@@ -19,7 +20,7 @@ class QuickDataObject
         static $extensionInstanceProperty = null;
 
         if (!$extensionInstanceProperty) {
-            $extensionInstanceProperty = new ReflectionProperty('Object', 'extension_instances');
+            $extensionInstanceProperty = new \ReflectionProperty('Object', 'extension_instances');
             $extensionInstanceProperty->setAccessible(true);
         }
 

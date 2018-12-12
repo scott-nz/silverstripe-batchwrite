@@ -2,6 +2,10 @@
 
 namespace BatchWrite\Tests;
 
+use BatchWrite\Helpers\Batch;
+use SilverStripe\Dev\SapphireTest;
+use SilverStripe\Versioned\Versioned;
+
 /**
  * Class BatchDeleteTest
  * @package BatchWrite\Tests
@@ -10,7 +14,7 @@ namespace BatchWrite\Tests;
  * Class BatchDeleteTest
  * @package BatchWrite\Tests
  */
-class BatchDeleteTest extends \SapphireTest
+class BatchDeleteTest extends SapphireTest
 {
     /**
      * @var bool
@@ -20,15 +24,15 @@ class BatchDeleteTest extends \SapphireTest
     /**
      * @var array
      */
-    protected $extraDataObjects = array(
-        'BatchWrite\Tests\Animal',
-        'BatchWrite\Tests\Batman',
-        'BatchWrite\Tests\Cat',
-        'BatchWrite\Tests\Child',
-        'BatchWrite\Tests\Child',
-        'BatchWrite\Tests\Dog',
-        'BatchWrite\Tests\DogPage',
-        'BatchWrite\Tests\Human',
+    protected static $extra_dataobjects = array(
+        Animal::class,
+        Batman::class,
+        Cat::class,
+        Child::class,
+        Child::class,
+        Dog::class,
+        DogPage::class,
+        Human::class,
     );
 
     /**
@@ -36,7 +40,7 @@ class BatchDeleteTest extends \SapphireTest
      */
     public function __construct()
     {
-        $this->setUpOnce();
+        $this->setUpBeforeClass();
     }
 
     /**
@@ -61,7 +65,7 @@ class BatchDeleteTest extends \SapphireTest
             $objects[] = $dog;
         }
 
-        $batch = new \Batch();
+        $batch = new Batch();
         $batch->delete($objects);
 
         $this->assertEquals(0, Dog::get()->Count());
@@ -85,7 +89,7 @@ class BatchDeleteTest extends \SapphireTest
             $ids[] = $dog->ID;
         }
 
-        $batch = new \Batch();
+        $batch = new Batch();
         $batch->deleteIDs($className, $ids);
 
         $this->assertEquals(0, Dog::get()->Count());
@@ -105,10 +109,10 @@ class BatchDeleteTest extends \SapphireTest
             $pages[] = $page;
         }
 
-        $batch = new \Batch();
+        $batch = new Batch();
 
-        $currentStage = \Versioned::current_stage();
-        \Versioned::reading_stage('Live');
+        $currentStage = Versioned::current_stage();
+        Versioned::reading_stage('Live');
 
         $this->assertEquals(100, DogPage::get()->Count());
 
@@ -116,7 +120,7 @@ class BatchDeleteTest extends \SapphireTest
 
         $this->assertEquals(0, DogPage::get()->Count());
 
-        \Versioned::reading_stage('Stage');
+        Versioned::reading_stage('Stage');
 
         $this->assertEquals(100, DogPage::get()->Count());
 
@@ -124,12 +128,6 @@ class BatchDeleteTest extends \SapphireTest
 
         $this->assertEquals(0, DogPage::get()->Count());
 
-        \Versioned::reading_stage($currentStage);
+        Versioned::reading_stage($currentStage);
     }
-//
-//    public static function tearDownAfterClass()
-//    {
-//        parent::tearDownAfterClass();
-//        \SapphireTest::delete_all_temp_dbs();
-//    }
 }

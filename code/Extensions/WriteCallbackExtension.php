@@ -1,5 +1,6 @@
 <?php
-
+namespace BatchWrite\Extensions;
+use SilverStripe\ORM\DataExtension;
 /**
  * Class WriteCallbackExtension
  */

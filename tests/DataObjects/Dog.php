@@ -2,16 +2,18 @@
 
 namespace BatchWrite\Tests;
 
+use SilverStripe\Dev\TestOnly;
+
 /**
  * Class Dog
  * @package BatchWrite\Tests
  */
-class Dog extends Animal implements \TestOnly
+class Dog extends Animal implements TestOnly
 {
     /**
      * @var array
      */
-    public static $db = array(
+    private static $db = array(
         'Type' => 'Varchar',
         'Color' => 'Varchar',
     );
@@ -19,7 +21,7 @@ class Dog extends Animal implements \TestOnly
     /**
      * @var array
      */
-    public static $has_one = array(
-        'Owner' => 'BatchWrite\Tests\Human',
+    private static $has_one = array(
+        'Owner' => Human::class,
     );
 }

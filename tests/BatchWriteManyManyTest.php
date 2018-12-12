@@ -2,6 +2,9 @@
 
 namespace BatchWrite\Tests;
 
+use BatchWrite\Helpers\Batch;
+use SilverStripe\Dev\SapphireTest;
+
 /**
  * Class BatchWriteManyManyTest
  * @package BatchWrite\Tests
@@ -10,7 +13,7 @@ namespace BatchWrite\Tests;
  * Class BatchWriteManyManyTest
  * @package BatchWrite\Tests
  */
-class BatchWriteManyManyTest extends \SapphireTest
+class BatchWriteManyManyTest extends SapphireTest
 {
     /**
      * @var bool
@@ -20,15 +23,15 @@ class BatchWriteManyManyTest extends \SapphireTest
     /**
      * @var array
      */
-    protected $extraDataObjects = array(
-        'BatchWrite\Tests\Animal',
-        'BatchWrite\Tests\Batman',
-        'BatchWrite\Tests\Cat',
-        'BatchWrite\Tests\Child',
-        'BatchWrite\Tests\Child',
-        'BatchWrite\Tests\Dog',
-        'BatchWrite\Tests\DogPage',
-        'BatchWrite\Tests\Human',
+    protected static $extra_dataobjects = array(
+        Animal::class,
+        Batman::class,
+        Cat::class,
+        Child::class,
+        Child::class,
+        Dog::class,
+        DogPage::class,
+        Human::class,
     );
 
     /**
@@ -36,7 +39,7 @@ class BatchWriteManyManyTest extends \SapphireTest
      */
     public function __construct()
     {
-        $this->setUpOnce();
+        $this->setUpBeforeClass();
     }
 
     /**
@@ -55,7 +58,7 @@ class BatchWriteManyManyTest extends \SapphireTest
             $children[] = $child;
         }
 
-        $batch = new \Batch();
+        $batch = new Batch();
 
         $batch->write(array($parent));
         $batch->write($children);
@@ -69,10 +72,4 @@ class BatchWriteManyManyTest extends \SapphireTest
         $parent = Human::get()->first();
         $this->assertEquals(5, $parent->Children()->Count());
     }
-//
-//    public static function tearDownAfterClass()
-//    {
-//        parent::tearDownAfterClass();
-//        \SapphireTest::delete_all_temp_dbs();
-//    }
 }

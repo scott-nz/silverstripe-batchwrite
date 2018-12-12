@@ -1,14 +1,15 @@
 <?php
 
-namespace BatchWrite;
+namespace BatchWrite\Helpers;
 
-use Boolean;
-use DataObject;
-use Decimal;
+use SilverStripe\ORM\DataObject;
 use Exception;
-use Float;
-use Int;
 use mysqli;
+use SilverStripe\ORM\FieldType\DBBoolean;
+use SilverStripe\ORM\FieldType\DBDecimal;
+use SilverStripe\ORM\FieldType\DBFloat;
+use SilverStripe\ORM\FieldType\DBInt;
+use SilverStripe\ORM\FieldType\DBMoney;
 
 /**
  * Class MySQLiAdapter
@@ -64,12 +65,13 @@ class MySQLiAdapter implements DBAdapter
      */
     public function insertClass($className, $objects, $setID = false, $isUpdate = false, $tablePostfix = '')
     {
-        $fields = DataObject::database_fields($className);
+        $schema = DataObject::getSchema();
+        $fields = $schema->databaseFields($className);
 
         $singleton = singleton($className);
 
-        $fields = array_filter(array_keys($fields), function ($field) use ($singleton) {
-            return $singleton->hasOwnTableDatabaseField($field);
+        $fields = array_filter(array_keys($fields), function ($field) use ($schema, $className) {
+            return $schema->fieldSpec($className, $field, DataObjectSchema::DB_ONLY | DataObjectSchema::UNINHERITED );
         });
 
         if ($setID || $isUpdate) {
@@ -82,9 +84,9 @@ class MySQLiAdapter implements DBAdapter
         );
         foreach ($fields as $field) {
             $dbObject = $singleton->dbObject($field);
-            if ($dbObject instanceof Boolean || $dbObject instanceof Int) {
+            if ($dbObject instanceof DBBoolean || $dbObject instanceof DBInt) {
                 $typeLookup[$field] = 'i';
-            } else if ($dbObject instanceof Float || $dbObject instanceof Decimal || $dbObject instanceof Money) {
+            } else if ($dbObject instanceof DBFloat || $dbObject instanceof DBDecimal || $dbObject instanceof DBMoney) {
                 $typeLookup[$field] = 'd';
             } else {
                 $typeLookup[$field] = 's';
@@ -110,7 +112,7 @@ class MySQLiAdapter implements DBAdapter
         }
         array_unshift($params, $typeString);
 
-        $table = $className . ($tablePostfix ? '_' . $tablePostfix : '');
+        $table = $schema->tableName($className) . ($tablePostfix ? '_' . $tablePostfix : '');
 
         $columns = implode(', ', array_map(function ($name) {
             return "`{$name}`";

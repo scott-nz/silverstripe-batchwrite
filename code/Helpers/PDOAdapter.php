@@ -1,9 +1,13 @@
 <?php
 
-namespace BatchWrite;
+namespace BatchWrite\Helpers;
 
-use DataObject;
+use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\DataObjectSchema;
 use PDO;
+use SilverStripe\ORM\FieldType\DBDecimal;
+use SilverStripe\ORM\FieldType\DBFloat;
+use SilverStripe\ORM\FieldType\DBInt;
 
 /**
  * Class PDOAdapter
@@ -47,11 +51,13 @@ class PDOAdapter implements DBAdapter
      */
     public function insertClass($className, $objects, $setID = false, $isUpdate = false, $tablePostfix = '')
     {
-        $fields = DataObject::database_fields($className);
+        $schema = DataObject::getSchema();
+
+        $fields = $schema->databaseFields($className);
         $singleton = singleton($className);
 
-        $fields = array_filter(array_keys($fields), function ($field) use ($singleton) {
-            return $singleton->hasOwnTableDatabaseField($field);
+        $fields = array_filter(array_keys($fields), function ($field) use ($schema, $className) {
+            return $schema->fieldSpec($className, $field, DataObjectSchema::DB_ONLY | DataObjectSchema::UNINHERITED );
         });
 
         // if setting ID then add to fields
@@ -71,9 +77,9 @@ class PDOAdapter implements DBAdapter
                 // need to fill in null values with appropriate values
                 // TODO is there a better way to figure out if a value needs to be filled in?
                 if ($value === null) {
-                    if ($fieldObjects[$field] instanceof \Int ||
-                        $fieldObjects[$field] instanceof \Decimal ||
-                        $fieldObjects[$field] instanceof \Float) {
+                    if ($fieldObjects[$field] instanceof DBInt ||
+                        $fieldObjects[$field] instanceof DBDecimal ||
+                        $fieldObjects[$field] instanceof DBFloat) {
                         $value = 0;
                     } else {
                         $value = '';
@@ -84,7 +90,7 @@ class PDOAdapter implements DBAdapter
         }
 
         // ClassName or ClassName_Live
-        $tableName = $className . ($tablePostfix ? '_' . $tablePostfix : '');
+        $tableName = $schema->tableName($className) . ($tablePostfix ? '_' . $tablePostfix : '');
 
         //  (`Field1`, `Field2`, ...)
         $fieldSQL = implode(', ', array_map(function ($field) {

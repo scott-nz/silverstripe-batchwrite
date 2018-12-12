@@ -1,6 +1,12 @@
 <?php
-use BatchWrite\MySQLiAdapter;
-use BatchWrite\PDOAdapter;
+namespace BatchWrite\Helpers;
+
+use SilverStripe\ORM\Connect\MySQLDatabase;
+use SilverStripe\ORM\Connect\MySQLiConnector;
+use SilverStripe\ORM\Connect\PDOConnector;
+use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\DB;
+use SilverStripe\ORM\FieldType\DBField;
 
 /**
  * Class Batch
@@ -19,21 +25,10 @@ class Batch
 
     /**
      *
-     * @var int @@auto_increment_increment for the MySQL server
-     */
-    private static $autoIncrementIncrement;
-
-    /**
-     *
      */
     public function __construct()
     {
         $this->adapter = $this->getAdapter();
-        if(!isset(self::$autoIncrementIncrement)){
-            $result = \DB::query('SELECT @@auto_increment_increment as increment');
-            $row = $result->first();
-            self::$autoIncrementIncrement = intval($row['increment']);
-        }
     }
 
     /**
@@ -43,30 +38,30 @@ class Batch
     private function getAdapter()
     {
         // SS version >= 3.2
-        if (class_exists('MySQLiConnector') && class_exists('PDOConnector')) {
+        if (class_exists(MySQLiConnector::class) && class_exists(PDOConnector::class)) {
             $connector = DB::get_connector();
             if ($connector instanceof MySQLiConnector) {
-                $connProperty = new ReflectionProperty('MySQLiConnector', 'dbConn');
+                $connProperty = new \ReflectionProperty(MySQLiConnector::class, 'dbConn');
                 $connProperty->setAccessible(true);
                 $conn = $connProperty->getValue($connector);
                 return new MySQLiAdapter($conn);
             } else if ($connector instanceof PDOConnector) {
-                $connProperty = new ReflectionProperty('PDOConnector', 'pdoConnection');
+                $connProperty = new \ReflectionProperty(PDOConnector::class, 'pdoConnection');
                 $connProperty->setAccessible(true);
                 $conn = $connProperty->getValue($connector);
                 return new PDOAdapter($conn);
             }
         } else {
-            $db = DB::getConn();
+            $db = DB::get_conn();
             if ($db instanceof MySQLDatabase) {
-                $connProperty = new ReflectionProperty('MySQLDatabase', 'dbConn');
+                $connProperty = new \ReflectionProperty(MySQLDatabase::class, 'dbConn');
                 $connProperty->setAccessible(true);
                 $conn = $connProperty->getValue($db);
                 return new MySQLiAdapter($conn);
             }
         }
 
-        throw new Exception('connection cannot be found');
+        throw new \Exception('connection cannot be found');
     }
 
     /**
@@ -79,7 +74,7 @@ class Batch
         }
 
         foreach ($dataObjects as $dataObject) {
-            $onBeforeWriteMethod = new ReflectionMethod($dataObject, 'onBeforeWrite');
+            $onBeforeWriteMethod = new \ReflectionMethod($dataObject, 'onBeforeWrite');
             $onBeforeWriteMethod->setAccessible(true);
             $onBeforeWriteMethod->invoke($dataObject);
         }
@@ -87,7 +82,7 @@ class Batch
         $this->writeTablePostfix($dataObjects);
 
         foreach ($dataObjects as $dataObject) {
-            $onBeforeWriteMethod = new ReflectionMethod($dataObject, 'onAfterWrite');
+            $onBeforeWriteMethod = new \ReflectionMethod($dataObject, 'onAfterWrite');
             $onBeforeWriteMethod->setAccessible(true);
             $onBeforeWriteMethod->invoke($dataObject);
         }
@@ -143,14 +138,14 @@ class Batch
             }
             $dataObject->setField('LastEdited', $date);
 
-            $types[$dataObject->class][$action][] = $dataObject;
+            $types[$dataObject->ClassName][$action][] = $dataObject;
         }
 
         foreach ($types as $className => $actions) {
             foreach ($actions as $action => $objects) {
                 $classSingleton = singleton($className);
                 $ancestry = array_filter($classSingleton->getClassAncestry(), function ($class) {
-                    return DataObject::has_own_table($class);
+                    return DataObject::getSchema()->classHasTable($class);
                 });
 
                 $rootClass = array_shift($ancestry);
@@ -166,7 +161,7 @@ class Batch
                     $id = intval($row['ID']);
                     foreach ($objects as $obj) {
                         $obj->setField('ID', $id);
-                        $id += self::$autoIncrementIncrement;
+                        $id++;
                     }
                 }
 
@@ -344,7 +339,7 @@ class Batch
 
         $field = DBField::create_field('Int', null, 'ID');
         $ids = '(' . implode(', ', array_map(function ($id) use ($field) {
-                $id = $id instanceof \DataObject ? $id->ID : $id;
+                $id = $id instanceof DataObject ? $id->ID : $id;
                 return $field->prepValueForDB($id);
             }, $ids)) . ')';
 

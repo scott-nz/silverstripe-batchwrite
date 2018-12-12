@@ -2,6 +2,8 @@
 
 namespace BatchWrite\Tests;
 
+use SilverStripe\Dev\SapphireTest;
+
 /**
  * Class WriteCallbackTest
  * @package BatchWrite\Tests
@@ -10,7 +12,7 @@ namespace BatchWrite\Tests;
  * Class WriteCallbackTest
  * @package BatchWrite\Tests
  */
-class WriteCallbackTest extends \SapphireTest
+class WriteCallbackTest extends SapphireTest
 {
     /**
      * @var bool
@@ -20,15 +22,15 @@ class WriteCallbackTest extends \SapphireTest
     /**
      * @var array
      */
-    protected $extraDataObjects = array(
-        'BatchWrite\Tests\Animal',
-        'BatchWrite\Tests\Batman',
-        'BatchWrite\Tests\Cat',
-        'BatchWrite\Tests\Child',
-        'BatchWrite\Tests\Child',
-        'BatchWrite\Tests\Dog',
-        'BatchWrite\Tests\DogPage',
-        'BatchWrite\Tests\Human',
+    protected static $extra_dataobjects = array(
+        Animal::class,
+        Batman::class,
+        Cat::class,
+        Child::class,
+        Child::class,
+        Dog::class,
+        DogPage::class,
+        Human::class,
     );
 
     /**
@@ -36,7 +38,7 @@ class WriteCallbackTest extends \SapphireTest
      */
     public function __construct()
     {
-        $this->setUpOnce();
+        $this->setUpBeforeClass();
     }
 
     /**
@@ -127,10 +129,4 @@ class WriteCallbackTest extends \SapphireTest
         $this->assertEquals($owner->ID, $dog1->OwnerID);
         $this->assertEquals($owner->ID, $dog2->OwnerID);
     }
-
-//    public static function tearDownAfterClass()
-//    {
-//        parent::tearDownAfterClass();
-//        \SapphireTest::delete_all_temp_dbs();
-//    }
 }

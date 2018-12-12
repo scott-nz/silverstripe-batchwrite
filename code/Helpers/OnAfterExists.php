@@ -1,4 +1,7 @@
 <?php
+namespace BatchWrite\Helpers;
+
+use SilverStripe\ORM\DataObject;
 
 /**
  * Class OnAfterExists
@@ -25,10 +28,10 @@ class OnAfterExists
      */
     public function __construct(callable $callback)
     {
-        $this->objects = new ArrayObject();
+        $this->objects = new \ArrayObject();
         $this->callback = $callback;
 
-        $this->dataObjectRecordProperty = new ReflectionProperty('DataObject', 'record');
+        $this->dataObjectRecordProperty = new \ReflectionProperty(DataObject::class, 'record');
         $this->dataObjectRecordProperty->setAccessible(true);
     }
 

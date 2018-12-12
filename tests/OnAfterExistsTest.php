@@ -2,6 +2,10 @@
 
 namespace BatchWrite\Tests;
 
+use BatchWrite\Helpers\Batch;
+use BatchWrite\Helpers\OnAfterExists;
+use SilverStripe\Dev\SapphireTest;
+
 /**
  * Class OnAfterExistsTest
  * @package BatchWrite\Tests
@@ -10,7 +14,7 @@ namespace BatchWrite\Tests;
  * Class OnAfterExistsTest
  * @package BatchWrite\Tests
  */
-class OnAfterExistsTest extends \SapphireTest
+class OnAfterExistsTest extends SapphireTest
 {
     /**
      * @var bool
@@ -20,15 +24,15 @@ class OnAfterExistsTest extends \SapphireTest
     /**
      * @var array
      */
-    protected $extraDataObjects = array(
-        'BatchWrite\Tests\Animal',
-        'BatchWrite\Tests\Batman',
-        'BatchWrite\Tests\Cat',
-        'BatchWrite\Tests\Child',
-        'BatchWrite\Tests\Child',
-        'BatchWrite\Tests\Dog',
-        'BatchWrite\Tests\DogPage',
-        'BatchWrite\Tests\Human',
+    protected static $extra_dataobjects = array(
+        Animal::class,
+        Batman::class,
+        Cat::class,
+        Child::class,
+        Child::class,
+        Dog::class,
+        DogPage::class,
+        Human::class,
     );
 
     /**
@@ -36,7 +40,7 @@ class OnAfterExistsTest extends \SapphireTest
      */
     public function __construct()
     {
-        $this->setUpOnce();
+        $this->setUpBeforeClass();
     }
 
     /**
@@ -51,7 +55,7 @@ class OnAfterExistsTest extends \SapphireTest
         $owner = new Human();
         $owner->Name = 'Bob';
 
-        $afterExists = new \OnAfterExists(function () use ($dog) {
+        $afterExists = new OnAfterExists(function () use ($dog) {
             $dog->write();
         });
 
@@ -83,7 +87,7 @@ class OnAfterExistsTest extends \SapphireTest
         $cat = new Cat();
         $cat->Name = 'Agnis';
 
-        $afterExists = new \OnAfterExists(function () use ($dog) {
+        $afterExists = new OnAfterExists(function () use ($dog) {
             $dog->write();
         });
 
@@ -131,9 +135,9 @@ class OnAfterExistsTest extends \SapphireTest
             $children[] = $child;
         }
 
-        $batch = new \Batch();
+        $batch = new Batch();
 
-        $afterExists = new \OnAfterExists(function () use($batch, $parent, $children) {
+        $afterExists = new OnAfterExists(function () use($batch, $parent, $children) {
             $sets = array();
             foreach ($children as $child) {
                 $sets[] = array($parent, 'Children', $child);
@@ -150,10 +154,4 @@ class OnAfterExistsTest extends \SapphireTest
         $parent = Human::get()->first();
         $this->assertEquals(5, $parent->Children()->Count());
     }
-//
-//    public static function tearDownAfterClass()
-//    {
-//        parent::tearDownAfterClass();
-//        \SapphireTest::delete_all_temp_dbs();
-//    }
 }

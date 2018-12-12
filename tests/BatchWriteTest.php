@@ -2,6 +2,10 @@
 
 namespace BatchWrite\Tests;
 
+use BatchWrite\Helpers\Batch;
+use SilverStripe\Dev\SapphireTest;
+use SilverStripe\Versioned\Versioned;
+
 /**
  * Class BatchWriteTest
  * @package BatchWrite\Tests
@@ -10,7 +14,7 @@ namespace BatchWrite\Tests;
  * Class BatchWriteTest
  * @package BatchWrite\Tests
  */
-class BatchWriteTest extends \SapphireTest
+class BatchWriteTest extends SapphireTest
 {
     /**
      * @var bool
@@ -20,15 +24,15 @@ class BatchWriteTest extends \SapphireTest
     /**
      * @var array
      */
-    protected $extraDataObjects = array(
-        'BatchWrite\Tests\Animal',
-        'BatchWrite\Tests\Batman',
-        'BatchWrite\Tests\Cat',
-        'BatchWrite\Tests\Child',
-        'BatchWrite\Tests\Child',
-        'BatchWrite\Tests\Dog',
-        'BatchWrite\Tests\DogPage',
-        'BatchWrite\Tests\Human',
+    protected static $extra_dataobjects = array(
+        Animal::class,
+        Batman::class,
+        Cat::class,
+        Child::class,
+        Child::class,
+        Dog::class,
+        DogPage::class,
+        Human::class,
     );
 
     /**
@@ -36,7 +40,7 @@ class BatchWriteTest extends \SapphireTest
      */
     public function __construct()
     {
-        $this->setUpOnce();
+        $this->setUpBeforeClass();
     }
 
     /**
@@ -48,7 +52,7 @@ class BatchWriteTest extends \SapphireTest
         $animal->Name = 'Bob';
         $animal->Country = 'Africa';
 
-        $batch = new \Batch();
+        $batch = new Batch();
         $batch->write(array($animal));
 
         $this->assertTrue($animal->exists());
@@ -70,7 +74,7 @@ class BatchWriteTest extends \SapphireTest
             $animals[] = $animal;
         }
 
-        $batch = new \Batch();
+        $batch = new Batch();
         $batch->write($animals);
 
         for ($i = 0; $i < 100; $i++) {
@@ -97,7 +101,7 @@ class BatchWriteTest extends \SapphireTest
             $dogs[] = $dog;
         }
 
-        $batch = new \Batch();
+        $batch = new Batch();
         $batch->write($dogs);
 
         for ($i = 0; $i < 100; $i++) {
@@ -124,7 +128,7 @@ class BatchWriteTest extends \SapphireTest
         $cat->Country = 'Canada';
         $cat->HasClaws = true;
 
-        $batch = new \Batch();
+        $batch = new Batch();
         $batch->write(array($cat));
 
         $this->assertTrue($cat->exists());
@@ -148,7 +152,7 @@ class BatchWriteTest extends \SapphireTest
         $dog->Name = 'Jimmy';
         $dog->Color = 'Brown';
 
-        $batch = new \Batch();
+        $batch = new Batch();
         $batch->write(array($dog));
 
         $dog = Dog::get()->byID($dog->ID);
@@ -167,23 +171,23 @@ class BatchWriteTest extends \SapphireTest
         $page->Title = 'I Love Dogs';
         $page->Author = 'Mr Scruffy';
 
-        $batch = new \Batch();
+        $batch = new Batch();
         $batch->writeToStage(array($page), 'Stage');
         $this->assertEquals(1, $page->ID);
 
-        $currentStage = \Versioned::current_stage();
+        $currentStage = Versioned::current_stage();
 
-        \Versioned::reading_stage('Stage');
+        Versioned::reading_stage('Stage');
         $page = DogPage::get()->first();
         $this->assertNotNull($page);
         $this->assertEquals('I Love Dogs', $page->Title);
         $this->assertEquals('Mr Scruffy', $page->Author);
 
-        \Versioned::reading_stage('Live');
+        Versioned::reading_stage('Live');
         $page = DogPage::get()->first();
         $this->assertNull($page);
 
-        \Versioned::reading_stage($currentStage);
+        Versioned::reading_stage($currentStage);
     }
 
     /**
@@ -195,23 +199,23 @@ class BatchWriteTest extends \SapphireTest
         $page->Title = 'I Hate Bones';
         $page->Author = 'Mrs Tu tu';
 
-        $batch = new \Batch();
+        $batch = new Batch();
         $batch->writeToStage(array($page), 'Live');
         $this->assertEquals(1, $page->ID);
 
-        $currentStage = \Versioned::current_stage();
+        $currentStage = Versioned::current_stage();
 
-        \Versioned::reading_stage('Stage');
+        Versioned::reading_stage('Stage');
         $page = DogPage::get()->first();
         $this->assertNull($page);
 
-        \Versioned::reading_stage('Live');
+        Versioned::reading_stage('Live');
         $page = DogPage::get()->first();
         $this->assertNotNull($page);
         $this->assertEquals('I Hate Bones', $page->Title);
         $this->assertEquals('Mrs Tu tu', $page->Author);
 
-        \Versioned::reading_stage($currentStage);
+        Versioned::reading_stage($currentStage);
     }
 
     /**
@@ -223,25 +227,25 @@ class BatchWriteTest extends \SapphireTest
         $page->Title = 'WOOF';
         $page->Author = 'Woof Woof';
 
-        $batch = new \Batch();
+        $batch = new Batch();
         $batch->writeToStage(array($page), 'Stage', 'Live');
         $this->assertEquals(1, $page->ID);
 
-        $currentStage = \Versioned::current_stage();
+        $currentStage = Versioned::current_stage();
 
-        \Versioned::reading_stage('Stage');
+        Versioned::reading_stage('Stage');
         $page = DogPage::get()->first();
         $this->assertNotNull($page);
         $this->assertEquals('WOOF', $page->Title);
         $this->assertEquals('Woof Woof', $page->Author);
 
-        \Versioned::reading_stage('Live');
+        Versioned::reading_stage('Live');
         $page = DogPage::get()->first();
         $this->assertNotNull($page);
         $this->assertEquals('WOOF', $page->Title);
         $this->assertEquals('Woof Woof', $page->Author);
 
-        \Versioned::reading_stage($currentStage);
+        Versioned::reading_stage($currentStage);
     }
 
     /**
@@ -257,7 +261,7 @@ class BatchWriteTest extends \SapphireTest
         $cat->Name = 'Puff daddy';
         $cat->HasClaws = true;
 
-        $batch = new \Batch();
+        $batch = new Batch();
         $batch->write(array($dog, $cat));
 
         $this->assertTrue($dog->exists());
@@ -271,10 +275,4 @@ class BatchWriteTest extends \SapphireTest
         $this->assertEquals('Puff daddy', $cat->Name);
         $this->assertEquals(1, $cat->HasClaws);
     }
-
-//    public static function tearDownAfterClass()
-//    {
-//        parent::tearDownAfterClass();
-//        \SapphireTest::delete_all_temp_dbs();
-//    }
 }

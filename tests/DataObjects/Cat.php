@@ -2,11 +2,13 @@
 
 namespace BatchWrite\Tests;
 
+use SilverStripe\Dev\TestOnly;
+
 /**
  * Class Cat
  * @package BatchWrite\Tests
  */
-class Cat extends Animal implements \TestOnly
+class Cat extends Animal implements TestOnly
 {
     /**
      * @var bool
@@ -21,7 +23,7 @@ class Cat extends Animal implements \TestOnly
     /**
      * @var array
      */
-    public static $db = array(
+    private static $db = array(
         'Type' => 'Varchar',
         'HasClaws' => 'Boolean',
     );
@@ -29,8 +31,8 @@ class Cat extends Animal implements \TestOnly
     /**
      * @var array
      */
-    public static $has_one = array(
-        'Enemy' => 'BatchWrite\Tests\Dog',
+    private static $has_one = array(
+        'Enemy' => Dog::class,
     );
 
     /**
