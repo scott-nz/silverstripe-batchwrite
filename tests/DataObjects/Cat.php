@@ -1,12 +1,18 @@
 <?php
-
-namespace BatchWrite\Tests;
-
+namespace LittleGiant\BatchWrite\Tests\DataObjects;
+use LittleGiant\BatchWrite\Extensions\WriteCallbackExtension;
 use SilverStripe\Dev\TestOnly;
-
+use SilverStripe\ORM\FieldType\DBBoolean;
+use SilverStripe\ORM\FieldType\DBVarchar;
 /**
  * Class Cat
+ *
  * @package BatchWrite\Tests
+ * @property string $Type
+ * @property bool $HasClaws
+ * @property int $EnemyID
+ * @method Dog|null Enemy()
+ * @mixin WriteCallbackExtension
  */
 class Cat extends Animal implements TestOnly
 {
@@ -14,27 +20,23 @@ class Cat extends Animal implements TestOnly
      * @var bool
      */
     private $onBeforeWriteCalled = false;
-
     /**
      * @var bool
      */
     private $onAfterWriteCalled = false;
-
     /**
      * @var array
      */
-    private static $db = array(
-        'Type' => 'Varchar',
-        'HasClaws' => 'Boolean',
-    );
-
+    private static $db = [
+        'Type'     => DBVarchar::class,
+        'HasClaws' => DBBoolean::class,
+    ];
     /**
      * @var array
      */
-    private static $has_one = array(
+    private static $has_one = [
         'Enemy' => Dog::class,
-    );
-
+    ];
     /**
      *
      */
@@ -43,7 +45,6 @@ class Cat extends Animal implements TestOnly
         parent::onBeforeWrite();
         $this->onBeforeWriteCalled = true;
     }
-
     /**
      *
      */
@@ -52,7 +53,6 @@ class Cat extends Animal implements TestOnly
         parent::onAfterWrite();
         $this->onAfterWriteCalled = true;
     }
-
     /**
      * @return bool
      */
@@ -60,7 +60,6 @@ class Cat extends Animal implements TestOnly
     {
         return $this->onBeforeWriteCalled;
     }
-
     /**
      * @return bool
      */

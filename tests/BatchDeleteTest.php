@@ -1,133 +1,87 @@
 <?php
-
-namespace BatchWrite\Tests;
-
-use BatchWrite\Helpers\Batch;
-use SilverStripe\Dev\SapphireTest;
+namespace LittleGiant\BatchWrite\Tests;
+use LittleGiant\BatchWrite\Batch;
+use LittleGiant\BatchWrite\Tests\DataObjects\Dog;
+use LittleGiant\BatchWrite\Tests\DataObjects\DogPage;
+use LittleGiant\BatchWrite\Tests\DataObjects\Human;
+use SilverStripe\ORM\ValidationException;
 use SilverStripe\Versioned\Versioned;
-
 /**
  * Class BatchDeleteTest
- * @package BatchWrite\Tests
+ * @package LittleGiant\BatchWrite\Tests
  */
-/**
- * Class BatchDeleteTest
- * @package BatchWrite\Tests
- */
-class BatchDeleteTest extends SapphireTest
+class BatchDeleteTest extends BaseTest
 {
     /**
-     * @var bool
-     */
-    protected $usesDatabase = true;
-
-    /**
-     * @var array
-     */
-    protected static $extra_dataobjects = array(
-        Animal::class,
-        Batman::class,
-        Cat::class,
-        Child::class,
-        Child::class,
-        Dog::class,
-        DogPage::class,
-        Human::class,
-    );
-
-    /**
-     * BatchDeleteTest constructor.
-     */
-    public function __construct()
-    {
-        $this->setUpBeforeClass();
-    }
-
-    /**
-     * @throws \ValidationException
+     * @throws ValidationException
      * @throws null
      */
     public function testBranchDelete_DeleteManyObjects_ObjectsDeleted()
     {
-        $objects = array();
+        $objects = [];
         for ($i = 0; $i < 100; $i++) {
-            $human = new Human();
-            $human->Name = 'Proud Owner ' . $i;
+            $human = Human::create();
+            $human->Name = $this->faker->name;
             $human->write();
-
-            $dog = new Dog();
-            $dog->Name = 'Pup ' . $i;
-            $dog->Color = 'Fifty Shade No. ' . $i;
-            $dog->Owner($human);
+            $dog = Dog::create();
+            $dog->Name = $this->faker->firstName;
+            $dog->Color = $this->faker->colorName;
+            $dog->OwnerID = $human->ID;
             $dog->write();
-
             $objects[] = $human;
             $objects[] = $dog;
         }
-
-        $batch = new Batch();
+        $this->assertCount(100, Dog::get());
+        $this->assertCount(100, Human::get());
+        $batch = Batch::create();
         $batch->delete($objects);
-
-        $this->assertEquals(0, Dog::get()->Count());
-        $this->assertEquals(0, Human::get()->Count());
+        $this->assertCount(0, Dog::get());
+        $this->assertCount(0, Human::get());
     }
-
     /**
-     * @throws \ValidationException
+     * @throws ValidationException
      * @throws null
      */
     public function testBranchDeleteIDs_DeleteManyIDs_ObjectsDeleted()
     {
-        $className = '';
-        $ids = array();
+        $ids = [];
         for ($i = 0; $i < 100; $i++) {
-            $dog = new Dog();
-            $dog->Name = 'Pup ' . $i;
-            $dog->Color = 'Fifty Shade No. ' . $i;
+            $dog = Dog::create();
+            $dog->Name = $this->faker->firstName;
+            $dog->Color = $this->faker->colorName;
             $dog->write();
-            $className = $dog->ClassName;
             $ids[] = $dog->ID;
         }
-
-        $batch = new Batch();
-        $batch->deleteIDs($className, $ids);
-
-        $this->assertEquals(0, Dog::get()->Count());
+        $this->assertCount(100, Dog::get());
+        $batch = Batch::create();
+        $batch->deleteIDs(Dog::class, $ids);
+        $this->assertCount(0, Dog::get());
     }
-
     /**
      *
      */
     public function testBatchDelete_VersionedObject_ObjectsDeleted()
     {
-        $pages = array();
+        $pages = [];
         for ($i = 0; $i < 100; $i++) {
-            $page = new DogPage();
-            $page->Title = 'Hero Dog ' . $i;
-            $page->writeToStage('Stage');
-            $page->publish('Stage', 'Live');
+            $page = DogPage::create();
+            $page->Title = $this->faker->firstName;
+            $page->writeToStage(Versioned::DRAFT);
+            $page->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
             $pages[] = $page;
         }
-
-        $batch = new Batch();
-
-        $currentStage = Versioned::current_stage();
-        Versioned::reading_stage('Live');
-
-        $this->assertEquals(100, DogPage::get()->Count());
-
-        $batch->deleteFromStage($pages, 'Live');
-
-        $this->assertEquals(0, DogPage::get()->Count());
-
-        Versioned::reading_stage('Stage');
-
-        $this->assertEquals(100, DogPage::get()->Count());
-
-        $batch->deleteFromStage($pages, 'Stage');
-
-        $this->assertEquals(0, DogPage::get()->Count());
-
-        Versioned::reading_stage($currentStage);
+        $batch = Batch::create();
+        Versioned::withVersionedMode(function () use ($batch, $pages) {
+            Versioned::set_stage(Versioned::LIVE);
+            $this->assertCount(100, DogPage::get());
+            $batch->deleteFromStage($pages, Versioned::LIVE);
+            $this->assertCount(0, DogPage::get());
+        });
+        Versioned::withVersionedMode(function () use ($batch, $pages) {
+            Versioned::set_stage(Versioned::DRAFT);
+            $this->assertCount(100, DogPage::get());
+            $batch->deleteFromStage($pages, Versioned::DRAFT);
+            $this->assertCount(0, DogPage::get());
+        });
     }
 }

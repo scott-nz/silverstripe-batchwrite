@@ -1,75 +1,39 @@
 <?php
-
-namespace BatchWrite\Tests;
-
-use BatchWrite\Helpers\Batch;
-use SilverStripe\Dev\SapphireTest;
-
+namespace LittleGiant\BatchWrite\Tests;
+use LittleGiant\BatchWrite\Batch;
+use LittleGiant\BatchWrite\Tests\DataObjects\Batman;
+use LittleGiant\BatchWrite\Tests\DataObjects\Child;
+use LittleGiant\BatchWrite\Tests\DataObjects\Human;
 /**
  * Class BatchWriteManyManyTest
- * @package BatchWrite\Tests
+ * @package LittleGiant\BatchWrite\Tests
  */
-/**
- * Class BatchWriteManyManyTest
- * @package BatchWrite\Tests
- */
-class BatchWriteManyManyTest extends SapphireTest
+class BatchWriteManyManyTest extends BaseTest
 {
-    /**
-     * @var bool
-     */
-    protected $usesDatabase = true;
-
-    /**
-     * @var array
-     */
-    protected static $extra_dataobjects = array(
-        Animal::class,
-        Batman::class,
-        Cat::class,
-        Child::class,
-        Child::class,
-        Dog::class,
-        DogPage::class,
-        Human::class,
-    );
-
-    /**
-     * BatchWriteManyManyTest constructor.
-     */
-    public function __construct()
-    {
-        $this->setUpBeforeClass();
-    }
-
     /**
      *
      */
     public function testWriteManyMany_CreateParentAndChildren_WritesManyMany()
     {
-        $parent = new Batman();
+        $parent = Batman::create();
         $parent->Name = 'Bruce Wayne';
         $parent->Car = 'Bat mobile';
-
-        $children = array();
+        $children = [];
         for ($i = 0; $i < 5; $i++) {
-            $child = new Child();
-            $child->Name = 'Soldier #' . $i;
+            $child = Child::create();
+            $child->Name = $this->faker->name;
             $children[] = $child;
         }
-
-        $batch = new Batch();
-
-        $batch->write(array($parent));
+        $batch = Batch::create();
+        $batch->write([$parent]);
         $batch->write($children);
-
-        $sets = array();
+        $sets = [];
         foreach ($children as $child) {
-            $sets[] = array($parent, 'Children', $child);
+            $sets[] = [$parent, 'Children', $child];
         }
         $batch->writeManyMany($sets);
-
+        /** @var Human $parent */
         $parent = Human::get()->first();
-        $this->assertEquals(5, $parent->Children()->Count());
+        $this->assertCount(5, $parent->Children());
     }
 }

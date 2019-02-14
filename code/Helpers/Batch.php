@@ -1,10 +1,13 @@
 <?php
 namespace BatchWrite\Helpers;
 
+use SilverStripe\Core\ClassInfo;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\Connect\MySQLDatabase;
 use SilverStripe\ORM\Connect\MySQLiConnector;
 use SilverStripe\ORM\Connect\PDOConnector;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\DataObjectSchema;
 use SilverStripe\ORM\DB;
 use SilverStripe\ORM\FieldType\DBField;
 
@@ -242,7 +245,7 @@ class Batch
         $ancestry = $parent->getClassAncestry();
         foreach ($ancestry as $parentClass) {
             $singleton = singleton($parentClass);
-            $manyMany = $singleton->many_many();
+            $manyMany = $singleton->many_many;
 
             if (isset($manyMany[$relation])) {
                 $belongsClass = $manyMany[$relation];
@@ -267,7 +270,7 @@ class Batch
         $types = array();
 
         foreach ($dataObjects as $dataObject) {
-            $types[$dataObject->class][] = $dataObject->getField('ID');
+            $types[$dataObject->ClassName][] = $dataObject->getField('ID');
         }
 
         foreach ($types as $className => $ids) {
@@ -294,7 +297,7 @@ class Batch
         $types = array();
 
         foreach ($dataObjects as $dataObject) {
-            $types[$dataObject->class][] = $dataObject->getField('ID');
+            $types[$dataObject->ClassName][] = $dataObject->getField('ID');
         }
 
         foreach ($types as $className => $ids) {
@@ -333,8 +336,10 @@ class Batch
         }
 
         $singleton = singleton($className);
+
         $ancestry = array_reverse(array_filter($singleton->getClassAncestry(), function ($class) {
-            return DataObject::has_own_table($class);
+            $dataObjectSchema = DataObject::getSchema();
+            return $dataObjectSchema->classHasTable($class);
         }));
 
         $field = DBField::create_field('Int', null, 'ID');
@@ -344,9 +349,9 @@ class Batch
             }, $ids)) . ')';
 
         foreach ($ancestry as $class) {
-            $table = $class . ($postfix ? '_' . $postfix : '');
+            $table = ClassInfo::shortName($class) . ($postfix ? '_' . $postfix : '');
             $sql = "DELETE FROM `{$table}` WHERE ID IN {$ids}";
-            DB::query($sql);
+            $result = DB::query($sql);
         }
     }
 }
