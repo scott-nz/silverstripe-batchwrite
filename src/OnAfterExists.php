@@ -1,13 +1,20 @@
 <?php
-namespace BatchWrite\Helpers;
 
+namespace LittleGiant\BatchWrite;
+
+use ArrayObject;
+use ReflectionProperty;
+use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\ORM\DataObject;
 
 /**
  * Class OnAfterExists
+ * @package LittleGiant\BatchWrite
  */
 class OnAfterExists
 {
+    use Injectable;
+
     /**
      * @var ArrayObject
      */
@@ -28,10 +35,10 @@ class OnAfterExists
      */
     public function __construct(callable $callback)
     {
-        $this->objects = new \ArrayObject();
+        $this->objects = new ArrayObject();
         $this->callback = $callback;
 
-        $this->dataObjectRecordProperty = new \ReflectionProperty(DataObject::class, 'record');
+        $this->dataObjectRecordProperty = new ReflectionProperty(DataObject::class, 'record');
         $this->dataObjectRecordProperty->setAccessible(true);
     }
 
@@ -44,7 +51,7 @@ class OnAfterExists
     }
 
     /**
-     * @param $objects
+     * @param iterable|DataObject[] $objects
      * @param callable $callback
      */
     public function addCondition($objects, callable $callback = null)
