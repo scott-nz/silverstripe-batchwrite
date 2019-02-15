@@ -4,4 +4,4 @@ name: batchwrite
 
 SilverStripe\ORM\DataObject:
   extensions:
-    - BatchWrite\Extensions\WriteCallbackExtension
+    - LittleGiant\BatchWrite\Extensions\WriteCallbackExtension
